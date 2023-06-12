@@ -12,6 +12,7 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
 	"github.com/ProtonMail/go-crypto/openpgp/errors"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
+
 )
 
 // PublicKeyType is the armor type for a PGP public key.
@@ -133,13 +134,13 @@ func (e *Entity) EncryptionKey(now time.Time) (Key, bool) {
 	candidateSubkey := -1
 	var maxTime time.Time
 	for i, subkey := range e.Subkeys {
-		if subkey.Sig.FlagsValid &&
+		if !subkey.Sig.FlagsValid || (subkey.Sig.FlagsValid &&
 			subkey.Sig.FlagEncryptCommunications &&
 			subkey.PublicKey.PubKeyAlgo.CanEncrypt() &&
 			!subkey.PublicKey.KeyExpired(subkey.Sig, now) &&
 			!subkey.Sig.SigExpired(now) &&
 			!subkey.Revoked(now) &&
-			(maxTime.IsZero() || subkey.Sig.CreationTime.After(maxTime)) {
+			(maxTime.IsZero() || subkey.Sig.CreationTime.After(maxTime))) {
 			candidateSubkey = i
 			maxTime = subkey.Sig.CreationTime
 		}
